@@ -1,15 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concert List</title>
 </head>
 <body>
     <h1>Concert List</h1>
-    <a href="/add-concert/">Add Concert</a>
-    <!-- TODO: show delete link for each concert -->
 
-    <!-- TODO: Add list of concerts -->
+    <p>
+        <a href="/add-concert">Add Concert</a> |
+        <a href="/delete-concert" onclick="return confirm('Are you sure you want to delete all concerts?')">Delete All Concerts</a>
+    </p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Performer</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="concert : ${concerts}">
+                <td th:text="${concert.id}">1</td>
+                <td th:text="${concert.title}">Title</td>
+                <td th:text="${concert.performer}">Performer</td>
+                <td th:text="${#dates.format(concert.date, 'yyyy-MM-dd')}">2025-08-25</td>
+                <td th:text="${concert.description}">Some description</td>
+                <td>
+                    <a th:href="@{'/delete-concert/' + ${concert.id}}" 
+                       onclick="return confirm('Delete this concert?')">Delete</a>
+                </td>
+            </tr>
+
+            <!-- Message when no concerts exist -->
+            <tr th:if="${concerts.size() == 0}">
+                <td colspan="6">No concerts available.</td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>
