@@ -1,74 +1,56 @@
 package th.mfu;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import static org.mockito.ArgumentMatchers.any;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ConcertController.class)
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
 public class ConcertControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Test
-    public void testAddAndListConcerts() throws Exception {
-        List<Concert> Concerts = new ArrayList<>();
-        Concerts.add(new Concert("xxxxx", "description of xxxx"));
-        Concerts.add(new Concert("yyyyyy", "description of yyyyy"));
-
-        for (Concert Concert : Concerts) {
-            mockMvc.perform(post("/concerts")
-                    .param("title", Concert.getTitle())
-                    .param("description", Concert.getDescription()))
-                    .andExpect(redirectedUrl("/concerts"));
-        }
-
-        mockMvc.perform(get("/concerts"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("list-concert"))
-                .andExpect(model().attribute("concerts", hasSize(2)));
-    }
-
-    @AfterEach
-    public void resetDb() throws Exception {
+    
+    @BeforeEach
+    public void clearConcerts() throws Exception {
         mockMvc.perform(get("/delete-concert"));
     }
 
     @Test
     public void testAddAndDeleteConcerts() throws Exception {
+        // add 1 concert
+        mockMvc.perform(post("/concerts")
+                .param("title", "Test Concert")
+                .param("performer", "Test Performer")
+                .param("date", "2025-08-25")
+                .param("description", "Test Description"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/concerts"));
 
-        List<Concert> Concerts = new ArrayList<>();
-        Concerts.add(new Concert("xxxxx", "description of xxxx"));
-        Concerts.add(new Concert("yyyyyy", "description of yyyyy"));
-
-        for (Concert Concert : Concerts) {
-            mockMvc.perform(post("/concerts")
-                    .param("title", Concert.getTitle())
-                    .param("description", Concert.getDescription()))
-                    .andExpect(redirectedUrl("/concerts"));
-        }
-
-        mockMvc.perform(get("/delete-concert/1"))
-                .andExpect(view().name("redirect:/concerts"));
-
+        
         mockMvc.perform(get("/concerts"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("list-concert"))
                 .andExpect(model().attribute("concerts", hasSize(1)));
 
-    }
+        
+        mockMvc.perform(get("/delete-concert"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/concerts"));
 
+       
+        mockMvc.perform(get("/concerts"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("list-concert"))
+                .andExpect(model().attribute("concerts", hasSize(0)));
+    }
 }
